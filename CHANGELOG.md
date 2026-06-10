@@ -1,6 +1,7 @@
 # v0.9.3 2026-06-07
 
 - Remove: mkvdrama search, only serve from database
+- Change: only saved encrypted subtitle to DB
 
 # v0.9.2 2026-06-03
 

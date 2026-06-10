@@ -554,7 +554,7 @@ export default class MkvdramaScraper extends BaseProvider {
             `${redirectedUrl}`,
             "min",
           );
-          return;
+          throw error;
         }
         const streamRows = hosterToStream(
           urls,

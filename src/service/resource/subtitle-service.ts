@@ -37,7 +37,7 @@ class SubtitleService {
         const isExpired =
           subtitle.subtitles.createdAt + (subtitle.subtitles.ttl ?? 0) <
           Date.now();
-        if (url.includes(ONETOUCHTV_HOST) && isExpired) {
+        if (isExpired) {
           return;
         }
         return {

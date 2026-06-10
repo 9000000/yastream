@@ -652,7 +652,7 @@ export class OnetouchtvScrapper extends BaseProvider {
             season: "1",
             episode: episode?.toString() ?? "1",
             providerContentId: `${this.name}:${onetouchtvId}`,
-            subtitle: subtitleContent,
+            // subtitle: subtitleContent,
             ttl: TTL_MS.stream,
           };
         }),
