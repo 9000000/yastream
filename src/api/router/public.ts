@@ -3,6 +3,7 @@ import fs from "fs";
 import { Hono } from "hono";
 import path from "path";
 import pkg from "../../../package.json" with { type: "json" };
+import { defaultConfig } from "../../lib/manifest.js";
 
 const publicRouter = new Hono();
 const rootDir = process.cwd();
@@ -20,7 +21,8 @@ const getLandingPage = () => {
   cachedLandingHtml = fs
     .readFileSync(filePath, "utf8")
     .replace("{{VERSION}}", pkg.version)
-    .replace("{{CHANGELOG}}", mdToHtml(changelog));
+    .replace("{{CHANGELOG}}", mdToHtml(changelog))
+    .replace("{{DEFAULT_CONFIG}}", JSON.stringify(defaultConfig));
 
   return cachedLandingHtml;
 };

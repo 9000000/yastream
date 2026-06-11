@@ -136,31 +136,9 @@ const hiddenCatalogs = [
   "idrama.series.iDrama",
   "idrama.series.Search",
 ];
-const defaultCatalogs = [
-  "kisskh.series.Korean",
-  "onetouchtv.series.Korean",
-  // "mkvdrama.series.Korean",
-  ...hiddenCatalogs,
-];
-const defaultConfig = {
-  catalog: [
-    "kisskh",
-    "onetouchtv",
-    //"mkvdrama",
-  ],
-  stream: [
-    "kisskh",
-    "onetouchtv",
-    //"mkvdrama",
-  ],
-  catalogs: defaultCatalogs,
-  nsfw: false,
-  info: false,
-  poster: "rpdb",
-  tbKey: "",
-  mfpUrl: "",
-  mfpPass: "",
-};
+const defaultConfig = JSON.parse(
+  document.getElementById("defaultConfig").textContent,
+);
 const configKeys = Object.keys(defaultConfig);
 // Configure
 document

@@ -2,6 +2,7 @@
 
 - Remove: mkvdrama search, only serve from database
 - Change: only saved encrypted subtitle to DB
+- Change: single source of default config
 
 # v0.9.2 2026-06-03
 
