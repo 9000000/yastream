@@ -88,7 +88,7 @@ interface TmdbTvSearch {
 
 class TMDBService extends BaseMeta {
   private apiKey: string = ENV.TMDB_API_KEY;
-  private baseUrl: string = "https://api.themoviedb.org/3";
+  private baseUrl: string = "https://api.tmdb.org/3";
   private imageUrl: string = "https://image.tmdb.org";
 
   // Search
