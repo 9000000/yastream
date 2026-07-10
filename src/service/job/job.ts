@@ -15,9 +15,12 @@ import { handleError } from "../../utils/error.js";
 import { Logger } from "../../utils/logger.js";
 import { ntfy } from "../../utils/notify/ntfy.js";
 
-export interface JobMkvdrama {
+export interface JobMkvdramaStream {
   mkvdramaId: string;
   content: ContentDetail;
+}
+export interface JobMkvdramaScrape {
+  pageUrl: string;
 }
 
 const logger = new Logger("JOB");
@@ -59,14 +62,36 @@ async function runCronJob() {
       try {
         logger.log(`Running ${job.id}`);
         await mkvdrama.runMkvdramaStream(job);
-      } catch (error) {
+      } catch (error: any) {
         handleError(error, logger, `Failed to run ${job.id}`);
+        const data = JSON.parse(job.data);
+        data.error = error.message;
+        job.data = JSON.stringify(data);
         upsertJob({ ...job, status: JOB_STATUS.FAILED });
         ntfy("yastream job failed", `${job.id}`, "low");
-        deleteJob(job.id);
+        jobMap.delete(job.id);
         break;
       }
-      deleteJob(job.id);
+      job.status = JOB_STATUS.DONE;
+      upsertJob(job);
+      jobMap.delete(job.id);
+      break;
+    case JOB_TYPE.MKVDRAMA_SCRAPE:
+      try {
+        logger.log(`Running ${job.id}`);
+        await mkvdrama.runMkvdramaScrape(job);
+      } catch (error: any) {
+        handleError(error, logger, `Failed to run ${job.id}`);
+        const data = JSON.parse(job.data);
+        data.error = error.message;
+        job.data = JSON.stringify(data);
+        upsertJob({ ...job, status: JOB_STATUS.FAILED });
+        ntfy("yastream job failed", `${job.id}`, "low");
+        jobMap.delete(job.id);
+        break;
+      }
+      job.status = JOB_STATUS.DONE;
+      upsertJob(job);
       jobMap.delete(job.id);
       break;
     default:
@@ -80,7 +105,7 @@ export async function getJobQueue() {
   const count = await countJob();
   if (!count) return { total: 0, wait: 0 };
   const total = count[0]?.count ?? 0;
-  return { total, wait: Math.ceil(total * 1.2) };
+  return { total, wait: Math.ceil(total * 0.5) };
 }
 
 export async function getJob(id: string) {

@@ -22,6 +22,7 @@ export interface UserConfig {
   tbKey: string;
   mfpUrl: string;
   mfpPass: string;
+  email: string;
   // Other (not on configure)
   ip: string;
 }
@@ -69,6 +70,7 @@ export const defaultConfig: UserConfig = {
   tbKey: "",
   mfpUrl: "",
   mfpPass: "",
+  email: "",
   ip: "",
 };
 

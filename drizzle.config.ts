@@ -1,10 +1,15 @@
 import type { Config } from "drizzle-kit";
 
+import * as dotenv from "dotenv";
+dotenv.config();
+
+const databaseUrl = process.env.DATABASE_URL || "";
 export default {
   schema: "./src/db/schema",
-  out: "./drizzle",
-  dialect: "sqlite",
+  out: "./drizzle/yastream",
+  dialect: "turso",
   dbCredentials: {
-    url: "data/yastream.db",
+    url: databaseUrl,
+    authToken: process.env.DATABASE_WRITE_TOKEN,
   },
 } satisfies Config;

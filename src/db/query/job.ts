@@ -32,13 +32,15 @@ export async function upsertJobs(jobs: EJobInsert[]) {
   }
 }
 
-export function getFirstJob() {
+export async function getFirstJob() {
   if (!db) return;
-  const row = db.query.job.findFirst({
-    where: eq(job.status, JOB_STATUS.PENDING),
-    orderBy: asc(job.createdAt),
-  });
-  return row;
+  const rows = await db
+    .select()
+    .from(job)
+    .where(eq(job.status, JOB_STATUS.PENDING))
+    .orderBy(asc(job.createdAt))
+    .limit(1);
+  return rows[0];
 }
 
 export async function countJob() {

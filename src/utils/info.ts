@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { EStream } from "../db/schema/streams.js";
+import { EStream } from "../db/schema/stream.js";
 import { axiosGet } from "./axios.js";
 import { handleError, ProbeInfoError } from "./error.js";
 import { Logger } from "./logger.js";

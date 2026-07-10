@@ -8,8 +8,11 @@ import { USER_AGENT } from "../constant.js";
 import { ENV } from "../env.js";
 import { handleError } from "../error.js";
 import { Logger } from "../logger.js";
+import { PIXELDRAIN_HOST } from "../../source/hoster/pixeldrain.js";
 
 const logger = new Logger("PUPPETEER");
+const FINAL_HOSTS = [...OUO_HOSTS, PIXELDRAIN_HOST];
+
 export async function getBrowser() {
   return await puppeteer.connect({
     browserWSEndpoint: ENV.PUPPETEER_WS_ENDPOINT, // ws://localhost:3000
@@ -249,7 +252,7 @@ export async function getRedirectedUrlCDP(
       logger.trace(`onRequestSent params ${params.documentURL}`);
       // Also capture any request to an external domain (follow-up after redirect)
       const reqUrl = params.request?.url || "";
-      logger.trace(`reqUrl ${reqUrl}`);
+      logger.log(`reqUrl ${reqUrl}`);
       if (
         reqUrl.startsWith("http") &&
         !NOT_FINAL_HOSTS.some((host) => reqUrl.includes(host))
@@ -260,7 +263,7 @@ export async function getRedirectedUrlCDP(
           if (redirectLocation) redirectedUrl = redirectLocation;
         }
       }
-      if (OUO_HOSTS.some((host) => params.documentURL.includes(host))) {
+      if (FINAL_HOSTS.some((host) => params.documentURL.includes(host))) {
         redirectLocation = params.documentURL;
         return;
       }

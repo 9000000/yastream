@@ -47,6 +47,12 @@ export default defineConfig({
           include: ["./src/source/debrid/**/*.test.ts"],
         },
       },
+      // {
+      //   test: {
+      //     name: "db",
+      //     include: ["./src/db/**/*.test.ts"],
+      //   },
+      // },
     ],
     environment: "node",
     // include: ["src/**/*.test.ts"],

@@ -4,25 +4,26 @@ import { providerContent } from "./provider_content.js";
 
 export enum JOB_TYPE {
   MKVDRAMA_STREAM = "MKVDRAMA_STREAM",
+  MKVDRAMA_SCRAPE = "MKVDRAMA_SCRAPE",
 }
 export enum JOB_STATUS {
   PENDING = "pending",
   FAILED = "failed",
+  DONE = "done",
 }
 
 export const job = sqliteTable("job", {
   id: text("id").primaryKey(),
   status: text("status", {
-    enum: [
-      JOB_STATUS.PENDING,
-      JOB_STATUS.FAILED,
-    ],
+    enum: [JOB_STATUS.PENDING, JOB_STATUS.FAILED, JOB_STATUS.DONE],
   }).notNull(),
   type: text("type", {
-    enum: [JOB_TYPE.MKVDRAMA_STREAM],
+    enum: [JOB_TYPE.MKVDRAMA_STREAM, JOB_TYPE.MKVDRAMA_SCRAPE],
   }).notNull(),
   data: text("data").notNull(),
-  createdAt: integer("created_at").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(new Date()),
 });
 
 export const jobRelations = relations(job, ({ one }) => ({

@@ -6,8 +6,8 @@ import {
   unique,
 } from "drizzle-orm/sqlite-core";
 import { providerContent } from "./provider_content.js";
-export const subtitles = sqliteTable(
-  "subtitles",
+export const subtitle = sqliteTable(
+  "subtitle",
   {
     id: text("id").primaryKey(),
     providerContentId: text("provider_content_id")
@@ -29,9 +29,9 @@ export const subtitles = sqliteTable(
       table.episode,
       table.lang,
     ),
-    index("idx_subtitles_provider_id").on(table.providerContentId),
+    index("idx_subtitle_provider_id").on(table.providerContentId),
   ],
 );
 
-export type ESubtitle = typeof subtitles.$inferSelect;
-export type ESubtitleInsert = typeof subtitles.$inferInsert;
+export type ESubtitle = typeof subtitle.$inferSelect;
+export type ESubtitleInsert = typeof subtitle.$inferInsert;

@@ -5,6 +5,7 @@ import { axiosGet } from "../utils/axios.js";
 import { cache } from "../utils/cache.js";
 import { ENV } from "../utils/env.js";
 import { Logger } from "../utils/logger.js";
+import { getProxyUrl } from "../utils/proxy/proxy.js";
 
 const logger = new Logger("SUB");
 
@@ -86,9 +87,7 @@ export async function getSetDecryptedSubtitle(
   }
 
   try {
-    const url = ENV.PROXY_KISSKH_SUBTITLE
-      ? `${ENV.PROXY_URL}:${ENV.PROXY_PORT}/${subtitleUrl}`
-      : subtitleUrl;
+    const url = getProxyUrl(subtitleUrl);
     const config: AxiosRequestConfig = {
       responseType: "text",
       timeout: 20000,

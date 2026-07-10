@@ -18,8 +18,8 @@ import {
   upsertSubtitles,
 } from "../db/queries.js";
 import { EContent } from "../db/schema/content.js";
-import { EStreamInsert } from "../db/schema/streams.js";
-import { ESubtitleInsert } from "../db/schema/subtitles.js";
+import { EStreamInsert } from "../db/schema/stream.js";
+import { ESubtitleInsert } from "../db/schema/subtitle.js";
 import { Prefix, UserConfig } from "../lib/manifest.js";
 import StreamService from "../service/resource/stream-service.js";
 import SubtitleService from "../service/resource/subtitle-service.js";
@@ -36,12 +36,7 @@ import {
   KisskhTokenError,
   RateLimitError,
 } from "../utils/error.js";
-import {
-  cleanUrl,
-  extractTitle,
-  formatStreamTitle,
-  parseOrigin,
-} from "../utils/format.js";
+import { cleanUrl, formatStreamTitle, parseOrigin } from "../utils/format.js";
 import { matchTitle } from "../utils/fuse.js";
 import { probeStreamInfo } from "../utils/info.js";
 import { CountryCode, iso639FromCountryCode } from "../utils/language.js";
@@ -50,7 +45,7 @@ import { ContentDetail } from "./meta.js";
 import { getPosterUrl, PosterParam } from "./poster/poster.js";
 import { BaseProvider } from "./provider.js";
 import { tmdb } from "./tmdb.js";
-import { ONETOUCHTV_HOST } from "./onetouchtv.js";
+import ProviderService from "../service/provider/provider-service.js";
 
 export interface SearchResult {
   id: number;
@@ -509,7 +504,6 @@ class KissKHScraperr extends BaseProvider {
     if (cacheSubtitles) return cacheSubtitles;
     const savedSubtitles = await SubtitleService.getSubtitlesFromDb(
       `${this.name}:${content.kisskhId}`,
-      // content.season ?? 1,
       1,
       content.episode ?? 1,
     );
@@ -574,36 +568,41 @@ class KissKHScraperr extends BaseProvider {
     const stream = await this._getStream(episodeId, token);
     if (!stream) return [];
     if (!stream.Video) return [];
-    const tmdbDetail = await tmdb.searchDetail(content.title, type);
-    if (tmdbDetail) {
-      const oldContent = await getContentByTmdb(tmdbDetail.id, type);
-      if (oldContent) {
-        const contentId = oldContent.id;
-        upsertContent(contentId, tmdbDetail, TTL_MS.content);
-        const providerContent = await getProviderContentById(
-          `${Prefix.KISSKH}:${kisskhId}`,
-        );
-        if (providerContent) {
-          upsertProviderContent({
-            ...providerContent,
-            title: kisskhDetail.title,
-            contentId: contentId,
-          });
-        } else {
-          upsertProviderContent({
-            id: `${Prefix.KISSKH}:${kisskhId}`,
-            contentId: contentId,
-            title: kisskhDetail.title,
-            ttl: null,
-            provider: this.name,
-            externalId: kisskhId.toString(),
-            image: kisskhDetail.thumbnail,
-            year: year,
-            type: type,
-          });
-        }
-      }
-    }
+    await ProviderService.syncContentAndProvider(
+      content,
+      kisskhId.toString(),
+      this.name,
+    );
+    // const tmdbDetail = await tmdb.searchDetail(content.title, type);
+    // if (tmdbDetail) {
+    //   const oldContent = await getContentByTmdb(tmdbDetail.id, type);
+    //   if (oldContent) {
+    //     const contentId = oldContent.id;
+    //     upsertContent(contentId, tmdbDetail, TTL_MS.content);
+    //     const providerContent = await getProviderContentById(
+    //       `${Prefix.KISSKH}:${kisskhId}`,
+    //     );
+    //     if (providerContent) {
+    //       upsertProviderContent({
+    //         ...providerContent,
+    //         title: kisskhDetail.title,
+    //         contentId: contentId,
+    //       });
+    //     } else {
+    //       upsertProviderContent({
+    //         id: `${Prefix.KISSKH}:${kisskhId}`,
+    //         contentId: contentId,
+    //         title: kisskhDetail.title,
+    //         ttl: null,
+    //         provider: this.name,
+    //         externalId: kisskhId.toString(),
+    //         image: kisskhDetail.thumbnail,
+    //         year: year,
+    //         type: type,
+    //       });
+    //     }
+    //   }
+    // }
     // Handle rate limit
     if (stream.Video.includes(RATE_LIMIT_DESCRIPTION))
       throw new RateLimitError(content.title);

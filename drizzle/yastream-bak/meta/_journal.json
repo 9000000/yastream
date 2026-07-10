@@ -78,6 +78,48 @@
       "when": 1778361656456,
       "tag": "0010_powerful_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1781222499690,
+      "tag": "0011_optimal_swordsman",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1781347170818,
+      "tag": "0012_yielding_ozymandias",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1781353433854,
+      "tag": "0013_large_corsair",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1781617947646,
+      "tag": "0014_odd_tyger_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1781618370086,
+      "tag": "0015_previous_doctor_faustus",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1781618387533,
+      "tag": "0016_foamy_slyde",
+      "breakpoints": true
     }
   ]
 }

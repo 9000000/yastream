@@ -1,5 +1,6 @@
 import axios, {
   AxiosError,
+  AxiosProxyConfig,
   AxiosRequestConfig,
   HttpStatusCode,
   RawAxiosRequestHeaders,
@@ -18,6 +19,7 @@ import { ONETOUCHTV_ORIGIN, USER_AGENT } from "./constant.js";
 import { ENV } from "./env.js";
 import { FlareSolverrError, RateLimitError } from "./error.js";
 import { Logger } from "./logger.js";
+import { getWebshareProxyConfig } from "./proxy/webshare.js";
 
 // process.setMaxListeners(20);
 EventEmitter.defaultMaxListeners = 23;
@@ -32,8 +34,14 @@ function createClient(
   // maxRequests: number,
   // duration: string = "1s",
   headers: Record<string, string> = {},
+  proxy?: AxiosProxyConfig,
 ) {
-  const instance = axios.create({ httpsAgent, headers });
+  const axiosConfig: AxiosRequestConfig = {
+    httpsAgent,
+    headers,
+  };
+  if (proxy) axiosConfig.proxy = proxy;
+  const instance = axios.create(axiosConfig);
   return instance;
   // when need to queue requests to avoid rate limit, use this:
   // return rateLimit(instance, {
@@ -86,20 +94,26 @@ const gofileClient = createClient({
     "4d3b34b24ce25cd943a73caf8c59f29d65a61ec11370f3630d53bc2dd37e42e9",
 });
 
-const kisskhClient = createClient({
-  "User-Agent": USER_AGENT,
-  Accept: "application/json",
-});
+const kisskhClient = createClient(
+  {
+    "User-Agent": USER_AGENT,
+    Accept: "application/json",
+  },
+  getWebshareProxyConfig(),
+);
 
 const onetouchtvHost = Buffer.from("YXBpMy5kZXZjb3JwLm1l=", "base64").toString(
   "utf-8",
 );
-const onetouchtvClient = createClient({
-  "User-Agent": USER_AGENT,
-  Accept: "*/*",
-  Origin: ONETOUCHTV_ORIGIN,
-  Referer: ONETOUCHTV_ORIGIN,
-});
+const onetouchtvClient = createClient(
+  {
+    "User-Agent": USER_AGENT,
+    Accept: "*/*",
+    Origin: ONETOUCHTV_ORIGIN,
+    Referer: ONETOUCHTV_ORIGIN,
+  },
+  getWebshareProxyConfig(),
+);
 onetouchtvClient.interceptors.response.use((response) => {
   response.data = decryptString(response.data);
   return response;
@@ -199,14 +213,16 @@ export async function axiosGet<T>(
             .map((c) => `${c.name}=${c.value}`)
             .join("; ");
         if (userAgent) headers["User-Agent"] = userAgent;
-        const response = await http.get(url, {
+
+        const axiosConfig = {
           timeout: 10000,
           ...config,
           headers,
           signal: controller.signal as any,
-        });
-        const data = response.data;
+        };
+        const response = await http.get(url, axiosConfig);
         clearTimeout(timeoutId);
+        const data = response.data;
         if (customClients.includes(http)) {
           cache.set(urlKey, data, cacheMs);
         }

@@ -1,0 +1,1 @@
+ALTER TABLE `ouo` ADD `password` text;

@@ -1,4 +1,4 @@
-import { deleteKv, getKv, setKvs } from "../db/queries.js";
+import { setKvs } from "../db/queries.js";
 import { EKVInsert } from "../db/schema/kv.js";
 import { ENV } from "./env.js";
 import { handleError } from "./error.js";
@@ -60,13 +60,6 @@ class GlobalCache {
   get(key: string): any | null {
     const entry = this.cache.get(key);
     if (!entry) {
-      logger.trace(`Miss | ${key}`);
-      const kvCache = getKv(key);
-      if (kvCache && Date.now() < kvCache.expiresAt) {
-        return JSON.parse(kvCache.value);
-      } else {
-        deleteKv(key);
-      }
       return null;
     }
     if (Date.now() > entry.expiresAt) {
@@ -121,7 +114,10 @@ class GlobalCache {
           expiresAt: entry.expiresAt as number,
         }))
         .toArray();
-      setKvs(kvCache);
+      // Fire-and-forget; we don't block shutdown on DB writes
+      setKvs(kvCache).catch((e) => {
+        handleError(e, logger, `Failed to persist cache to DB`);
+      });
     } catch (e) {
       handleError(e, logger, `Failed to persist cache to DB`);
     }

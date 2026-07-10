@@ -15,6 +15,8 @@ export async function getUrlsFromFilecrypt(url: string) {
   const response = await getFlareSolverr(url, session, 0);
   const html = response?.solution?.response;
   if (!html) throw new FilecryptError("No html");
+  const episodes = getEpisodeHosters(html);
+  if (episodes.length === 0) throw new FilecryptError("No available episodes");
   const $ = cheerio.load(html);
   const dlcButton = $("button.dlcdownload");
   const dlcButtonAttrs = dlcButton.attr() || {};
@@ -28,7 +30,6 @@ export async function getUrlsFromFilecrypt(url: string) {
   if (!dlcId) throw new FilecryptError("No dlcId found");
   const dlc = await getDlcFromFilecryptId(dlcId);
   const urls = await getUrlsFromDecryptit(dlc);
-  const episodes = getEpisodeHosters(html);
   return { urls, episodes };
 }
 

@@ -39,24 +39,24 @@ class StreamService {
     if (streamsAndProvider && streamsAndProvider.length > 0) {
       // Check TB cache and make a map of url -> {cached: boolean}
       const urls = streamsAndProvider
-        .filter((stream) => isHosterUrl(stream.streams.url))
-        .map((stream) => stream.streams.url);
+        .filter((stream) => isHosterUrl(stream.stream.url))
+        .map((stream) => stream.stream.url);
       const cachedMap = getCachedMap(urls, config);
       const streams = await Promise.all(
         streamsAndProvider.map(async (stream, index) => {
-          let url = stream.streams.url;
+          let url = stream.stream.url;
           const provider = stream.provider_content.provider;
           // if (stream.streams.playlist) {
           // Violate Cloudflare's ToS if serve m3u8 stream
           // url = StreamService.getStreamUrl(stream.streams.id);
           const isExpired =
-            stream.streams.createdAt + (stream.streams.ttl ?? 0) < Date.now();
+            stream.stream.createdAt + (stream.stream.ttl ?? 0) < Date.now();
           if (url.includes(ONETOUCHTV_HOST) && isExpired) {
             return;
           }
           // }
 
-          let info: StreamInfo = parseInfo(stream.streams);
+          let info: StreamInfo = parseInfo(stream.stream);
           const hasFullInfo: boolean =
             info.resolution !== undefined &&
             info.size !== undefined &&
@@ -66,19 +66,19 @@ class StreamService {
             const probeInfo = await probeStreamInfo(url);
             info = probeInfo || info;
             if (info?.resolution) {
-              stream.streams.resolution = `${info.resolution.width}x${info.resolution.height}`;
+              stream.stream.resolution = `${info.resolution.width}x${info.resolution.height}`;
             }
             if (info?.size)
-              stream.streams.size = info.size.toFixed(2).toString();
+              stream.stream.size = info.size.toFixed(2).toString();
             if (info?.hours && info?.minutes) {
-              stream.streams.duration = (
+              stream.stream.duration = (
                 info.hours * 60 +
                 info.minutes
               ).toString();
             }
             upsertStream([
               {
-                ...stream.streams,
+                ...stream.stream,
               },
             ]);
           }

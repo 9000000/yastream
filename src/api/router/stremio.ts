@@ -59,7 +59,7 @@ const getLimiter = (
       limit: limit,
       keyGenerator: (c) => {
         const { ip, userAgent } = extractHeaderInfo(c);
-        const key = `${ip}:${userAgent}`;
+        const key = `${ip}`;
         return key;
       },
       handler: (c) => {

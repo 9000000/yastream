@@ -9,13 +9,17 @@
     "test:source": "vitest run --project source",
     "test:service": "vitest run --project service",
     "test:browser": "vitest run --project browser",
+    "test:db": "vitest run --project db",
     "test": "vitest run",
     "dev": "tsc && node --trace-warnings --env-file=.env dist/server.js",
+    "dev:rep": "tsc && node --trace-warnings --env-file=.env.rep dist/server.js",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:genkey": "tsc && node dist/db/key/auth-key.js"
+    "db:genkey": "tsc && node dist/db/key/auth-key.js",
+    "dbsub:migrate": "drizzle-kit --config=drizzle-supporter.config.ts migrate",
+    "dbsub:generate": "drizzle-kit --config=drizzle-supporter.config.ts generate"
   },
   "type": "module",
   "engines": {
@@ -23,12 +27,12 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
+    "@libsql/client": "^0.17.3",
     "@stremio-addon/sdk": "github:hoangtamthai/stremio-addon-sdk#sdk",
     "@torbox/torbox-api": "^1.0.9",
     "@umami/node": "^0.4.0",
     "axios": "^1.16.0",
     "axios-rate-limit": "^1.9.0",
-    "better-sqlite3": "^12.9.0",
     "cheerio": "^1.2.0",
     "cron": "^4.4.0",
     "crypto-js": "^4.2.0",
@@ -47,9 +51,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^25.6.1",
+    "@types/node": "^25.9.3",
     "@types/probe-image-size": "^7.2.5",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",

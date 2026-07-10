@@ -2,13 +2,14 @@ import { ContentType } from "@stremio-addon/sdk";
 import { AxiosRequestConfig } from "axios";
 import { URLSearchParams } from "url";
 import { axiosGet } from "../utils/axios.js";
+import { USER_AGENT } from "../utils/constant.js";
 import { ENV } from "../utils/env.js";
 import { handleError, TmdbError } from "../utils/error.js";
 import { extractTitle } from "../utils/format.js";
-import { matchTitle, Search } from "../utils/fuse.js";
+import { matchTitle } from "../utils/fuse.js";
+import { getProxyUrl } from "../utils/proxy/proxy.js";
 import { BaseMeta, ContentDetail } from "./meta.js";
 import { Provider } from "./provider.js";
-import { USER_AGENT } from "../utils/constant.js";
 
 export interface TmdbFindResponse {
   movie_results: TmdbMovieResult[];
@@ -77,18 +78,16 @@ export interface TmdbMovieResult {
   backdrop_path?: string;
 }
 
-interface TmdbSeach extends Search {}
-
 interface TmdbMovieSearch {
   results: TmdbMovieResult[];
 }
 interface TmdbTvSearch {
   results: TmdbTvResult[];
 }
-
+export const TMDB_HOST = "api.themoviedb.org";
 class TMDBService extends BaseMeta {
   private apiKey: string = ENV.TMDB_API_KEY;
-  private baseUrl: string = "https://api.themoviedb.org/3";
+  private baseUrl: string = `https://${TMDB_HOST}/3`;
   private imageUrl: string = "https://image.tmdb.org";
 
   // Search
@@ -396,9 +395,7 @@ class TMDBService extends BaseMeta {
     if (queryParams.size > 0) {
       url += `?${queryParams}`;
     }
-    if (ENV.PROXY_TMDB) {
-      url = `${ENV.PROXY_URL}:${ENV.PROXY_PORT}/${url}`;
-    }
+    url = getProxyUrl(url);
     const config: AxiosRequestConfig = {
       headers: {
         "User-Agent": USER_AGENT,

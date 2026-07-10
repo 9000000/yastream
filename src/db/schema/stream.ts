@@ -2,8 +2,8 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { providerContent } from "./provider_content.js";
 import { unique } from "drizzle-orm/sqlite-core/unique-constraint";
 
-export const streams = sqliteTable(
-  "streams",
+export const stream = sqliteTable(
+  "stream",
   {
     id: text("id").primaryKey(),
     providerContentId: text("provider_content_id")
@@ -23,11 +23,11 @@ export const streams = sqliteTable(
     ttl: integer("ttl"),
   },
   (table) => [
-    unique("uq_streams_url").on(table.url),
-    unique("uq_streams_hash").on(table.hash),
-    index("idx_streams_provider_id").on(table.providerContentId),
+    unique("uq_stream_url").on(table.url),
+    unique("uq_stream_hash").on(table.hash),
+    index("idx_stream_provider_id").on(table.providerContentId),
   ],
 );
 
-export type EStream = typeof streams.$inferSelect;
-export type EStreamInsert = typeof streams.$inferInsert;
+export type EStream = typeof stream.$inferSelect;
+export type EStreamInsert = typeof stream.$inferInsert;

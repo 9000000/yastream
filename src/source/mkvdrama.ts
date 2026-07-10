@@ -23,7 +23,8 @@ import {
   addJob,
   getJob,
   getJobQueue,
-  JobMkvdrama,
+  JobMkvdramaStream,
+  JobMkvdramaScrape,
 } from "../service/job/job.js";
 import ProviderService from "../service/provider/provider-service.js";
 import StreamService from "../service/resource/stream-service.js";
@@ -191,10 +192,9 @@ export default class MkvdramaScraper extends BaseProvider {
       const cacheStreams: Stream[] = cache.get(streamKey);
       if (cacheStreams) return cacheStreams;
 
-      // if (!mkvdramaId) {
-      //   return [];
-      //   mkvdramaId = (await this.getSearch(title, year, season))?.mkvdramaId;
-      // }
+      if (!mkvdramaId) {
+        mkvdramaId = (await this.getSearch(title, year, season))?.mkvdramaId;
+      }
       if (!mkvdramaId) return [];
       const dbStreams = await StreamService.getDbStreams(
         `${this.name}:${mkvdramaId}`,
@@ -230,7 +230,6 @@ export default class MkvdramaScraper extends BaseProvider {
           status: JOB_STATUS.PENDING,
           type: JOB_TYPE.MKVDRAMA_STREAM,
           data: JSON.stringify({ mkvdramaId, content }),
-          createdAt: Date.now(),
         });
         description = `${total + 1} in queue\nWait about ${wait + 1} minutes`;
       }
@@ -335,12 +334,13 @@ export default class MkvdramaScraper extends BaseProvider {
     episodes: MetaVideo[];
     links: { link: string; quality: string }[];
     response: FlareSolverrResponse;
-    password?: string;
+    password: string | null;
   } | null> {
     try {
       const url = `${this.baseUrl}/${id}`;
       this.logger.log(`GET detail | ${url}`);
-      const response = await getFlareSolverr(url, this.name, 4);
+      const response = await getFlareSolverr(url, this.name, 5);
+      console.log(response);
       const content = response?.solution?.response || "";
       if (!response || content.includes("Preparing...")) {
         this.logger.error(`Not found detail from id | ${id}`);
@@ -415,15 +415,84 @@ export default class MkvdramaScraper extends BaseProvider {
         };
         episodes.push(episode);
       }
-      return { detail, episodes, links: ouoRedirectLinks, response: response };
+      // Extract password from admin comment (first moderator comment)
+      const password =
+        $(".fe-role-badge--moderator")
+          .first()
+          .closest(".fe-comment-card")
+          .find(".fe-comment-text")
+          .attr("data-raw-body")
+          ?.replace(/\*\*/g, "")
+          .trim() || null;
+
+      return {
+        detail,
+        episodes,
+        links: ouoRedirectLinks,
+        response: response,
+        password: password,
+      };
     } catch (error) {
       handleError(error, this.logger, `getDetailAndEpisodes failed`);
       return null;
     }
   }
 
+  async getContentsFromPage(pageUrl: string): Promise<ContentDetail[]> {
+    const response = await getFlareSolverr(pageUrl, this.name, 4);
+    const content = response?.solution?.response || "";
+    if (!response || content.includes("Preparing...")) {
+      this.logger.error(`Not found content from page url | ${pageUrl}`);
+      throw new MkvdramaError("No content from page url");
+    }
+    const $ = cheerio.load(content);
+    const contents = $("article.bs")
+      .toArray()
+      .map((el) => {
+        const $el = $(el);
+        const $a = $el.find("a.tip");
+        const href = $a.attr("href") || "";
+        const id = href.replace(/^\//, "").replace(/\/$/, "");
+        const title =
+          $a.attr("title") ||
+          $el.find("h2").attr("content") ||
+          $el.find("h2").text().trim();
+        const country = $el.find(".country").text().trim();
+        const type: ContentType = "series";
+        const content: ContentDetail = {
+          id,
+          mkvdramaId: id,
+          title,
+          type,
+          year: new Date().getFullYear(),
+        };
+        return content;
+      });
+    this.logger.log(`Page ${pageUrl}: ${contents.length}`);
+    return contents;
+  }
+
+  async runMkvdramaScrape(job: EJob) {
+    const jobData: JobMkvdramaScrape = JSON.parse(job.data);
+    const pageUrl = jobData.pageUrl;
+    const contents = await this.getContentsFromPage(pageUrl);
+    contents.forEach((content) => {
+      const jobId = `job:streams:${this.name}:${content.mkvdramaId}`;
+      const jobData: JobMkvdramaStream = {
+        mkvdramaId: content.id,
+        content,
+      };
+      addJob({
+        id: jobId,
+        status: JOB_STATUS.PENDING,
+        type: JOB_TYPE.MKVDRAMA_STREAM,
+        data: JSON.stringify(jobData),
+      });
+    });
+  }
+
   async runMkvdramaStream(job: EJob) {
-    const jobData: JobMkvdrama = JSON.parse(job.data);
+    const jobData: JobMkvdramaStream = JSON.parse(job.data);
     const mkvdramaId = jobData.mkvdramaId;
     const content = jobData.content;
     const providerContentId = `${this.name}:${mkvdramaId}`;
@@ -449,7 +518,7 @@ export default class MkvdramaScraper extends BaseProvider {
       );
       const links = await Promise.all(
         bestLinks.map(async (link) => {
-          const redirectUrl = `${this.baseUrl}${link.link}`;
+          const redirectUrl = new URL(link.link, this.baseUrl).toString();
           const ouoLink = await getRedirectedUrlCDP(
             redirectUrl,
             data.response?.solution?.cookies,
@@ -485,6 +554,7 @@ export default class MkvdramaScraper extends BaseProvider {
               originalUrl,
               redirectedUrl,
               createdAt: Date.now(),
+              password: data.password,
               quality: link.quality as Quality,
             };
             // ouos.push(ouo);

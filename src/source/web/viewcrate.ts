@@ -5,6 +5,7 @@ import { getFlareSolverr } from "../../utils/browser/flaresolverr.js";
 import { ViewcrateError } from "../../utils/error.js";
 import { EpisodeHoster, getHosterFromUrl, Hoster } from "../hoster/hoster.js";
 import { getUrlsFromDecryptit } from "./decryptit.js";
+import { USER_AGENT } from "../../utils/constant.js";
 
 interface ViewcrateCnl {
   crypted: string;
@@ -24,23 +25,58 @@ export async function getUrlsFromViewcrate(url: string) {
 }
 
 /** Has all links */
-export async function getUrlsFromViewcrateDlc(url: string) {
+export async function getUrlsFromViewcrateDlc(url: string, password?: string) {
   // need to load js to have episodes
   // const html = await axiosGet<string>(url);
   const response = await getFlareSolverr(url, "viewcrate", 2);
+  const cookies = response?.solution?.cookies;
+  const userAgent = response?.solution?.userAgent;
   const html = response?.solution?.response;
   if (!html) throw new ViewcrateError("No html");
-  if (html.toLowerCase().includes("protected content"))
+  if (html.toLowerCase().includes("protected content")) {
     throw new ViewcrateError("Protected content");
-  const $ = cheerio.load(html);
-  const link = $("a").attr("href");
-  if (!link) throw new ViewcrateError("No link");
+    // const { csrfToken, postUrl } = getProtectedContent(html);
+    // const postData = `csrf_token=${csrfToken}&password=${password}`;
+    // const response = await axiosPost<string>(postUrl, postData, {
+    //   headers: {
+    //     Cookie: cookies?.map((c) => `${c.name}=${c.value}`).join("; "),
+    //     "User-Agent": userAgent || USER_AGENT,
+    //     "Content-Type": "application/x-www-form-urlencoded",
+    //     Accept:
+    //       "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    //     "Accept-Encoding": "gzip, deflate, br, zstd",
+    //   },
+    // });
+  }
+  const link = await getDlcUrl(html);
+  if (!link) throw new ViewcrateError("No dlc link");
   const dlcUrl = new URL(link, VIEWCRATE_ORIGIN).toString();
   const dlc = await axiosGet<string>(dlcUrl);
-  if (!dlc) throw new ViewcrateError("No dlc");
+  if (!dlc) throw new ViewcrateError("No dlc content");
   const urls = await getUrlsFromDecryptit(dlc);
   const episodes = getEpisodeHosters(html);
   return { urls, episodes };
+}
+
+export async function getDlcUrl(html: string): Promise<string | undefined> {
+  const $ = cheerio.load(html);
+  const attr = $("main > div").eq(2).attr("data-resolve-url");
+  if (!attr) throw new ViewcrateError("No DLC link");
+  const link = `/api/dlc_url/${attr.replace("/c/", "").split("/")[0]}`;
+  if (!link) throw new ViewcrateError("No DLC link");
+  const dlcUrl = new URL(link, VIEWCRATE_ORIGIN).toString();
+  const finalDlcUrl = await axiosGet<{ url: string }>(dlcUrl);
+  return finalDlcUrl?.url;
+}
+
+function getProtectedContent(html: string) {
+  const $ = cheerio.load(html);
+  const csrfToken = $("input[name='csrf_token']").val();
+  if (!csrfToken) throw new ViewcrateError("Protected Content No csrf");
+  const action = $("form").attr("action");
+  if (!action) throw new ViewcrateError("Protected Content No action");
+  const postUrl = new URL(action, VIEWCRATE_ORIGIN).toString();
+  return { csrfToken, postUrl };
 }
 
 export function getEpisodeHosters(html: string): EpisodeHoster[] {

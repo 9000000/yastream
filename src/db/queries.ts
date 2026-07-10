@@ -10,8 +10,8 @@ import {
   providerContent,
   type EProviderContent,
 } from "./schema/provider_content.js";
-import { EStreamInsert, streams } from "./schema/streams.js";
-import { ESubtitleInsert, subtitles } from "./schema/subtitles.js";
+import { EStreamInsert, stream } from "./schema/stream.js";
+import { ESubtitleInsert, subtitle } from "./schema/subtitle.js";
 import { handleError } from "../utils/error.js";
 
 const logger = new Logger("DB");
@@ -187,52 +187,54 @@ export async function getCountProviderContent() {
 }
 
 // STREAMS
-export async function upsertStream(stream: Omit<EStreamInsert, "createdAt">[]) {
+export async function upsertStream(
+  streamRow: Omit<EStreamInsert, "createdAt">[],
+) {
   if (!db) return;
   const now = Date.now();
-  const rows = stream.map((r) => ({ ...r, createdAt: now }));
+  const rows = streamRow.map((r) => ({ ...r, createdAt: now }));
   try {
     await db
-      .insert(streams)
+      .insert(stream)
       .values(rows)
       .onConflictDoUpdate({
-        target: streams.id,
+        target: stream.id,
         set: {
           providerContentId: sql.raw(
-            `excluded.${streams.providerContentId.name}`,
+            `excluded.${stream.providerContentId.name}`,
           ),
-          provider: sql.raw(`excluded.${streams.provider.name}`),
-          externalId: sql.raw(`excluded.${streams.externalId.name}`),
-          season: sql.raw(`excluded.${streams.season.name}`),
-          episode: sql.raw(`excluded.${streams.episode.name}`),
-          url: sql.raw(`excluded.${streams.url.name}`),
+          provider: sql.raw(`excluded.${stream.provider.name}`),
+          externalId: sql.raw(`excluded.${stream.externalId.name}`),
+          season: sql.raw(`excluded.${stream.season.name}`),
+          episode: sql.raw(`excluded.${stream.episode.name}`),
+          url: sql.raw(`excluded.${stream.url.name}`),
           // playlist: sql.raw(`excluded.${streams.playlist.name}`),
-          hash: sql.raw(`excluded.${streams.hash.name}`),
-          resolution: sql.raw(`excluded.${streams.resolution.name}`),
-          size: sql.raw(`excluded.${streams.size.name}`),
-          duration: sql.raw(`excluded.${streams.duration.name}`),
-          ttl: sql.raw(`excluded.${streams.ttl.name}`),
+          hash: sql.raw(`excluded.${stream.hash.name}`),
+          resolution: sql.raw(`excluded.${stream.resolution.name}`),
+          size: sql.raw(`excluded.${stream.size.name}`),
+          duration: sql.raw(`excluded.${stream.duration.name}`),
+          ttl: sql.raw(`excluded.${stream.ttl.name}`),
         },
       })
       .onConflictDoUpdate({
-        target: streams.url,
+        target: stream.url,
         set: {
-          season: sql.raw(`excluded.${streams.season.name}`),
-          createdAt: sql.raw(`excluded.${streams.createdAt.name}`),
-          ttl: sql.raw(`excluded.${streams.ttl.name}`),
+          season: sql.raw(`excluded.${stream.season.name}`),
+          createdAt: sql.raw(`excluded.${stream.createdAt.name}`),
+          ttl: sql.raw(`excluded.${stream.ttl.name}`),
           // playlist: sql.raw(`excluded.${streams.playlist.name}`),
-          hash: sql.raw(`excluded.${streams.hash.name}`),
-          resolution: sql.raw(`excluded.${streams.resolution.name}`),
-          size: sql.raw(`excluded.${streams.size.name}`),
-          duration: sql.raw(`excluded.${streams.duration.name}`),
+          hash: sql.raw(`excluded.${stream.hash.name}`),
+          resolution: sql.raw(`excluded.${stream.resolution.name}`),
+          size: sql.raw(`excluded.${stream.size.name}`),
+          duration: sql.raw(`excluded.${stream.duration.name}`),
         },
       })
       .onConflictDoUpdate({
-        target: streams.hash,
+        target: stream.hash,
         set: {
-          url: sql.raw(`excluded.${streams.url.name}`),
-          createdAt: sql.raw(`excluded.${streams.createdAt.name}`),
-          ttl: sql.raw(`excluded.${streams.ttl.name}`),
+          url: sql.raw(`excluded.${stream.url.name}`),
+          createdAt: sql.raw(`excluded.${stream.createdAt.name}`),
+          ttl: sql.raw(`excluded.${stream.ttl.name}`),
         },
       });
     const row = rows[0];
@@ -252,7 +254,7 @@ export async function upsertStream(stream: Omit<EStreamInsert, "createdAt">[]) {
 export async function getStream(id: string) {
   if (!db) return;
   const row = await db.query.streams.findFirst({
-    where: eq(streams.id, id),
+    where: eq(stream.id, id),
   });
   return row;
 }
@@ -266,33 +268,33 @@ export async function getStreamsJoinProvider(
   const episodeString = episode.toString();
   const rows = await db
     .select()
-    .from(streams)
+    .from(stream)
     .innerJoin(
       providerContent,
-      eq(streams.providerContentId, providerContent.id),
+      eq(stream.providerContentId, providerContent.id),
     )
     .where(
       and(
-        eq(streams.providerContentId, id),
-        eq(streams.season, seasonString),
-        eq(streams.episode, episodeString),
+        eq(stream.providerContentId, id),
+        eq(stream.season, seasonString),
+        eq(stream.episode, episodeString),
       ),
     );
   return rows;
 }
 export async function getCountStream() {
   if (!db) return;
-  const number = await db.select({ count: count(streams.id) }).from(streams);
+  const number = await db.select({ count: count(stream.id) }).from(stream);
   return number;
 }
 
 // SUBTITLES
 export async function upsertSubtitles(
-  subtitlesData: Omit<ESubtitleInsert, "createdAt">[],
+  subtitleRows: Omit<ESubtitleInsert, "createdAt">[],
 ) {
   if (!db) return;
   const now = Date.now();
-  const rows = subtitlesData.map((subtitle) => ({
+  const rows = subtitleRows.map((subtitle) => ({
     id: subtitle.id,
     providerContentId: subtitle.providerContentId,
     url: subtitle.url,
@@ -306,28 +308,28 @@ export async function upsertSubtitles(
 
   try {
     await db
-      .insert(subtitles)
+      .insert(subtitle)
       .values(rows)
       .onConflictDoUpdate({
-        target: subtitles.id,
+        target: subtitle.id,
         set: {
-          url: sql.raw(`excluded.${subtitles.url.name}`),
-          season: sql.raw(`excluded.${subtitles.season.name}`),
-          episode: sql.raw(`excluded.${subtitles.episode.name}`),
-          subtitle: sql.raw(`excluded.${subtitles.subtitle.name}`),
-          ttl: sql.raw(`excluded.${subtitles.ttl.name}`),
+          url: sql.raw(`excluded.${subtitle.url.name}`),
+          season: sql.raw(`excluded.${subtitle.season.name}`),
+          episode: sql.raw(`excluded.${subtitle.episode.name}`),
+          subtitle: sql.raw(`excluded.${subtitle.subtitle.name}`),
+          ttl: sql.raw(`excluded.${subtitle.ttl.name}`),
         },
       })
       .onConflictDoUpdate({
         target: [
-          subtitles.providerContentId,
-          subtitles.season,
-          subtitles.episode,
-          subtitles.lang,
+          subtitle.providerContentId,
+          subtitle.season,
+          subtitle.episode,
+          subtitle.lang,
         ],
         set: {
-          url: sql.raw(`excluded.${subtitles.url.name}`),
-          createdAt: sql.raw(`excluded.${subtitles.createdAt.name}`),
+          url: sql.raw(`excluded.${subtitle.url.name}`),
+          createdAt: sql.raw(`excluded.${subtitle.createdAt.name}`),
         },
       });
     const row = rows[0];
@@ -346,7 +348,7 @@ export async function upsertSubtitles(
 export async function getSubtitle(id: string) {
   if (!db) return;
   const row = db.query.subtitles.findFirst({
-    where: eq(subtitles.id, id),
+    where: eq(subtitle.id, id),
   });
   return row;
 }
@@ -358,55 +360,27 @@ export async function getSubtitlesJoinProvider(
   if (!db) return;
   const row = await db
     .select()
-    .from(subtitles)
+    .from(subtitle)
     .innerJoin(
       providerContent,
-      eq(subtitles.providerContentId, providerContent.id),
+      eq(subtitle.providerContentId, providerContent.id),
     )
     .where(
       and(
-        eq(subtitles.providerContentId, id),
-        eq(subtitles.season, season.toString()),
-        eq(subtitles.episode, episode.toString()),
+        eq(subtitle.providerContentId, id),
+        eq(subtitle.season, season.toString()),
+        eq(subtitle.episode, episode.toString()),
       ),
     );
   return row;
 }
 export async function getCountSubtitles() {
   if (!db) return;
-  const number = await db
-    .select({ count: count(subtitles.id) })
-    .from(subtitles);
+  const number = await db.select({ count: count(subtitle.id) }).from(subtitle);
   return number;
 }
 
 // KV
-export function setKv(
-  key: string,
-  value: any,
-  size: number,
-  expiresAt: number,
-) {
-  if (!db) return;
-  db.insert(kv)
-    .values({
-      key,
-      value: JSON.stringify(value),
-      size: size,
-      createdAt: Date.now(),
-      expiresAt: expiresAt,
-    })
-    .onConflictDoUpdate({
-      target: kv.key,
-      set: {
-        value: sql.raw(`excluded.${kv.value.name}`),
-        size: sql.raw(`excluded.${kv.size.name}`),
-        createdAt: sql.raw(`excluded.${kv.createdAt.name}`),
-        expiresAt: sql.raw(`excluded.${kv.expiresAt.name}`),
-      },
-    })
-    .run();
-}
 export async function setKvs(kvs: EKVInsert[]) {
   if (!db) return;
   try {
@@ -420,37 +394,19 @@ export async function setKvs(kvs: EKVInsert[]) {
           size: sql.raw(`excluded.${kv.size.name}`),
           expiresAt: sql.raw(`excluded.${kv.expiresAt.name}`),
         },
-      })
-      .run();
+      });
   } catch (e) {
     handleError(e, logger, `Failed to upsert kvs`);
   }
 }
 
-export function getKv(key: string) {
+export async function cleanKv() {
   if (!db) return;
-  const row = db.query.kv.findFirst({
-    where: eq(kv.key, key),
-  });
-  return row.sync();
+  await cleanKvLimit();
 }
-
-export function deleteKv(key: string) {
-  if (!db) return;
-  const row = db.delete(kv).where(eq(kv.key, key));
-  return row;
-}
-
-export function cleanKv() {
-  if (!db) return;
-  cleanKvLimit();
-}
-async function cleanKvLimit(limit = 500) {
+async function cleanKvLimit() {
   if (!db) return;
 
-  const result = await db
-    .delete(kv)
-    .where(lt(kv.expiresAt, Date.now()))
-    .limit(limit);
-  console.log(`Cleaned ${result.changes} KV entries`);
+  const result = await db.delete(kv).where(lt(kv.expiresAt, Date.now()));
+  console.log(`Cleaned ${result.rowsAffected} KV entries`);
 }

@@ -30,12 +30,12 @@ class SubtitleService {
     );
     if (subtitlesAndProvider && subtitlesAndProvider.length > 0) {
       const subtitles = subtitlesAndProvider.map((subtitle) => {
-        let url = subtitle.subtitles.url;
-        if (subtitle.subtitles.subtitle) {
-          url = SubtitleService.getSubtitleUrl(subtitle.subtitles.id);
+        let url = subtitle.subtitle.url;
+        if (subtitle.subtitle.subtitle) {
+          url = SubtitleService.getSubtitleUrl(subtitle.subtitle.id);
         }
         const isExpired =
-          subtitle.subtitles.createdAt + (subtitle.subtitles.ttl ?? 0) <
+          subtitle.subtitle.createdAt + (subtitle.subtitle.ttl ?? 0) <
           Date.now();
         if (isExpired) {
           return;
@@ -43,7 +43,7 @@ class SubtitleService {
         return {
           id: id,
           label: subtitle.provider_content.provider,
-          lang: subtitle.subtitles.lang,
+          lang: subtitle.subtitle.lang,
           url: url,
         };
       });

@@ -1,8 +1,8 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
-import * as cheerio from "cheerio";
 import { describe, expect, it } from "vitest";
 import {
+  getDlcUrl,
   getEpisodeHosters,
   getUrlsFromViewcrate,
   getUrlsFromViewcrateDlc,
@@ -18,7 +18,10 @@ describe("Viewcrate Hoster", () => {
     expect(urls).not.toBeNull();
   }, 30000);
   it("get viewcrate urls dlc", async () => {
-    const url = "https://viewcrate.cc/c/eb3622fb78bca7ffa70c9af05e7ad4cd";
+    const url = "https://viewcrate.cc/c/41b7f685f3023a9512a87131b6a32337"
+    // const url = "https://viewcrate.cc/c/3f2df7200516abfa874b69802665a6ef";
+    // const url = "https://viewcrate.cc/c/37493600688a32dccc61253f2ec1392b"
+    // const url = "https://viewcrate.cc/c/eb3622fb78bca7ffa70c9af05e7ad4cd";
     // const url = "https://viewcrate.cc/c/e0eebd57da6e265d55771fe51d5ffab0";
     // const url = "https://viewcrate.cc/c/b1d961fdb62630b581009b285427530d"
     const { urls, episodes } = await getUrlsFromViewcrateDlc(url);
@@ -67,6 +70,13 @@ describe("Viewcrate Hoster", () => {
     const episodes = getEpisodeHosters(html);
     console.log("episodes", JSON.stringify(episodes, null, 2));
     return episodes;
+  });
+
+  it("get dlc url", async () => {
+    const html = fs.readFileSync("./src/source/web/viewcrate2.html", "utf8");
+    const dlcUrl = await getDlcUrl(html);
+    console.log("dlcUrl", dlcUrl);
+    return dlcUrl;
   });
 
   it("decrypt", async () => {

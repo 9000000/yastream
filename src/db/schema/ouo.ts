@@ -5,6 +5,7 @@ export const ouo = sqliteTable("ouo", {
   id: text("id").primaryKey(),
   originalUrl: text("original_url").notNull(),
   redirectedUrl: text("redirected_url"),
+  password: text("password"),
   createdAt: integer("created_at").notNull(),
 });
 

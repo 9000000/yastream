@@ -1,5 +1,5 @@
 import { uuidv7 } from "uuidv7";
-import { EStreamInsert } from "../../db/schema/streams.js";
+import { EStreamInsert } from "../../db/schema/stream.js";
 import { UserConfig } from "../../lib/manifest.js";
 import { TTL_MS } from "../../utils/cache.js";
 import { cleanUrl } from "../../utils/format.js";
