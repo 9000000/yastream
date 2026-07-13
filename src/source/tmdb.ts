@@ -84,7 +84,7 @@ interface TmdbMovieSearch {
 interface TmdbTvSearch {
   results: TmdbTvResult[];
 }
-export const TMDB_HOST = "api.themoviedb.org";
+export const TMDB_HOST = "api.tmdb.org";
 class TMDBService extends BaseMeta {
   private apiKey: string = ENV.TMDB_API_KEY;
   private baseUrl: string = `https://${TMDB_HOST}/3`;
