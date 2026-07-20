@@ -171,7 +171,7 @@ export async function axiosGet<T>(
   let isRateLimit = false;
 
   // Global timeout wrapper to prevent hanging forever
-  const globalTimeout = ENV.RETRY_TIMEOUT_MS + 10000;
+  const globalTimeout = ENV.RETRY_TIMEOUT_MS;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), globalTimeout);
 
@@ -231,10 +231,15 @@ export async function axiosGet<T>(
         lastError = error;
         const errorStatus =
           error instanceof AxiosError && error.response?.status;
-        isRateLimit = errorStatus === HttpStatusCode.TooManyRequests;
+        isRateLimit =
+          errorStatus === HttpStatusCode.TooManyRequests ||
+          errorStatus === HttpStatusCode.Forbidden;
         if (http === onetouchtvClient) {
           logger.log(`Error ${(error as AxiosError).response?.data}`);
-          isRateLimit = isRateLimit || errorStatus === HttpStatusCode.NotFound;
+          isRateLimit =
+            isRateLimit ||
+            errorStatus === HttpStatusCode.NotFound ||
+            errorStatus === HttpStatusCode.Forbidden;
         }
         if (!isRateLimit) break;
         const delay = ENV.RETRY_DELAY_MS * attempt;

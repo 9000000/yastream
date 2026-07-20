@@ -1,3 +1,9 @@
+# v0.10.0 2026-07-20
+
+- Add: proxy from webshare for better rate limit
+- Change: migrate to libsql database for synchronized storage
+- Update: nsfw ids
+
 # v0.9.3 2026-06-07
 
 - Remove: mkvdrama search, only serve from database

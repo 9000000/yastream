@@ -13,7 +13,7 @@ import {
   isHosterUrl,
 } from "../../source/hoster/hoster.js";
 import { ONETOUCHTV_HOST } from "../../source/onetouchtv.js";
-import { API, STREAMS } from "../../utils/constant.js";
+import { API, STREAMS, TICKCOUNTER_HOST } from "../../utils/constant.js";
 import { getOrigin } from "../../utils/domain.js";
 import { extractSeason, formatStreamTitle } from "../../utils/format.js";
 import { parseInfo, probeStreamInfo, StreamInfo } from "../../utils/info.js";
@@ -52,6 +52,9 @@ class StreamService {
           const isExpired =
             stream.stream.createdAt + (stream.stream.ttl ?? 0) < Date.now();
           if (url.includes(ONETOUCHTV_HOST) && isExpired) {
+            return;
+          }
+          if (url.includes(TICKCOUNTER_HOST)) {
             return;
           }
           // }

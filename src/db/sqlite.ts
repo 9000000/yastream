@@ -19,15 +19,15 @@ class DatabaseManager {
     //     : `file:${databaseUrl}`;
     if (ENV.DATABASE_WRITE_TOKEN) {
       this.client = createClient({
-        url: ENV.DATABASE_REMOTE_URL || url,
-        tls: ENV.DATABASE_REMOTE_URL.includes("?tls=0") ? false : true,
+        url: url,
+        tls: url.includes("?tls=0") ? false : true,
         authToken: ENV.DATABASE_WRITE_TOKEN,
       });
     }
     if (ENV.DATABASE_READ_TOKEN) {
       this.replicaClient = createClient({
         url,
-        syncUrl: ENV.DATABASE_REMOTE_URL,
+        syncUrl: url,
         tls: url.includes("?tls=0") ? false : true,
         authToken: ENV.DATABASE_READ_TOKEN,
       });

@@ -54,14 +54,9 @@ const envSchema = z.object({
 
   // Database (optional - only used when DATABASE_ENABLED is true)
   DATABASE_ENABLED: z.coerce.boolean().default(false),
-  DATABASE_URL: z.string().default("libsql://yastream-db.tamthai.de"),
-  DATABASE_REMOTE_URL: z.string().default("libsql://yastream-db.tamthai.de"),
+  DATABASE_URL: z.string().default(""),
   DATABASE_WRITE_TOKEN: z.string().default(""),
-  DATABASE_READ_TOKEN: z
-    .string()
-    .default(
-      "eyJhbGciOiJFZERTQSJ9.eyJhIjoicm8iLCJpYXQiOjE3ODEyOTIyMzgsImV4cCI6MTgxMjg0OTgzOH0.0vdeXA2XF3VjjEzQGoTiAyCXbF57ZDKXlbA8QHw0VjUJgn8XIeW7tsaShvNy5MotAmkYiVvjVt5ZqUK-TmytBw",
-    ),
+  DATABASE_READ_TOKEN: z.string().default(""),
   DATABASE_SUPPORTER_URL: z.string().default(""),
   DATABASE_SUPPORTER_WRITE_TOKEN: z.string().default(""),
 
@@ -90,7 +85,7 @@ const envSchema = z.object({
 
   // Job
   JOB_ENABLED: z.coerce.boolean().default(false),
-  JOB_CRON: z.string().default(`*/5 * * * * *`),
+  JOB_CRON: z.string().default(`*/30 * * * * *`),
   // JOB_SCRAPE_CRON: z.string().default(`* */1 * * * *`),
 
   // Debrid service
