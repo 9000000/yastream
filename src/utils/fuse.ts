@@ -74,6 +74,7 @@ export function matchTitle<T extends Search>(
     );
   }
   const candidateTitle = best.fuseResult.item.normalizedTitle;
+  const candidateTitleMatch = candidateTitle;
   const tokenScore = token_sort_ratio(best.queryUsed, candidateTitle);
   if (tokenScore <= ENV.MIN_MATCHING_SCORE) {
     throw new MatchingError(

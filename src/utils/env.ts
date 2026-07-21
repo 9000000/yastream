@@ -10,6 +10,11 @@ const envSchema = z.object({
   MEDIAFLOW_PROXY_PASSWORD: z.string().optional().default(""),
   // Min title matching score (higher mean only very similar title matches)
   MIN_MATCHING_SCORE: z.coerce.number().min(0).max(100).default(75),
+  MATCH_IGNORES: z
+    .string()
+    .transform((str) => JSON.parse(str))
+    .pipe(z.array(z.url()))
+    .default(["uncut", "uncut version", "uncut ver."]),
 
   // Optional key
   TVDB_API_KEY: z.string().default(""),

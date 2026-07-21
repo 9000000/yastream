@@ -1,3 +1,8 @@
+# v0.10.0 2026-07-21
+
+- Add: match ignore words (remove uncut, uncut version)
+- Update: nsfw ids
+
 # v0.10.0 2026-07-20
 
 - Add: proxy from webshare for better rate limit

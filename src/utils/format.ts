@@ -1,3 +1,4 @@
+import { ENV } from "./env.js";
 import { toQuality, StreamInfo } from "./info.js";
 
 export function formatStreamTitle(
@@ -16,9 +17,7 @@ export function formatStreamTitle(
   const displayMinutes = info?.minutes ? `${info.minutes} minutes` : "";
   const displayTime = `${displayHours} ${displayMinutes}`.trim();
   const displaySize = info?.size ? `${info.size.toFixed(2)} GB | ` : "";
-  const displayResolution = info?.resolution
-    ? toQuality(info?.resolution)
-    : "";
+  const displayResolution = info?.resolution ? toQuality(info?.resolution) : "";
   const displaySizeResolution = `${displaySize}${displayResolution}`.trim();
 
   const formatTitle = season
@@ -56,7 +55,10 @@ export function extractSeason(rawTitle: string) {
   return { title: cleanTitle, season: season };
 }
 
-export const normalize = (str: string) => {
+export function normalize(str: string) {
+  for (const matchIgnore of ENV.MATCH_IGNORES) {
+    str = str.toLowerCase().replace(matchIgnore, "");
+  }
   return str
     .toLowerCase()
     .replace(/(\d+)(st|nd|rd|th)/g, "$1") // fix 2nd season -> 2 season
@@ -64,7 +66,7 @@ export const normalize = (str: string) => {
     .replace(/[^a-z0-9\s']/g, " ") // only character, space and quote
     .replace(/\s+/g, " ") // no extra spaces
     .trim();
-};
+}
 
 const REQUIRED_QUERY_URLS = ["mixdrop", "dramacool", "dood", "masuketin"];
 export function cleanUrl(url: string) {
@@ -81,4 +83,3 @@ export function parseOrigin(url: string) {
   const hostname = new URL(url).origin;
   return hostname;
 }
-
